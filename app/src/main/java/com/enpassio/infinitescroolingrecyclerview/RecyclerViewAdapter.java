@@ -49,7 +49,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
     public void onBindViewHolder(RecyclerViewAdapter.ViewHolder viewHolder, int position) {
         /* Get the data model based on position */
         String currentMovie = mPopularMovie.get(position);
-        Log.i("my_tag", "currentId is: " + currentMovie);
+        // Log.i("my_tag", "currentId is: " + currentMovie);
         /*
         Set item views based on your views and data model
          */
@@ -58,7 +58,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
 
     @Override
     public int getItemCount() {
-        Log.i("my_tag", "getItemCount is: " + mPopularMovie.size());
+        //  Log.i("my_tag", "getItemCount is: " + mPopularMovie.size());
         return mPopularMovie.size();
     }
 

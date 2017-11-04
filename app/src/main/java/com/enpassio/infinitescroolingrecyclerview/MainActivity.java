@@ -6,6 +6,7 @@ import android.support.annotation.RequiresApi;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 
 import com.android.volley.AuthFailureError;
 import com.android.volley.Request;
@@ -29,13 +30,18 @@ public class MainActivity extends AppCompatActivity {
 
     RecyclerViewAdapter mPopularMoviesAdapter;
 
+    ArrayList<String> dataArray;
+
+    private EndlessRecyclerViewScrollListener scrollListener;
+
+
     @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         getItems("http://ec2-35-154-135-19.ap-south-1.compute.amazonaws.com:8001/api/reminders/");
-
+        dataArray = new ArrayList<>();
 
         mPopularMovieRecyclerView = (RecyclerView) findViewById(R.id.recyclerView);
 
@@ -47,6 +53,18 @@ public class MainActivity extends AppCompatActivity {
         mPopularMovieRecyclerView.setLayoutManager(layoutManagerPopularMoviesPoster);
         mPopularMoviesAdapter = new RecyclerViewAdapter(MainActivity.this, new ArrayList<String>());
         mPopularMovieRecyclerView.setAdapter(mPopularMoviesAdapter);
+
+        scrollListener = new EndlessRecyclerViewScrollListener(layoutManagerPopularMoviesPoster) {
+            @Override
+            public void onLoadMore(int page, int totalItemsCount) {
+                Log.v("my_tagggg", "next_url inside onLoadMore is: " + next_url);
+                getItems(next_url);
+                next_url = null;
+            }
+        };
+        // Adds the scroll listener to RecyclerView
+        mPopularMovieRecyclerView.addOnScrollListener(scrollListener);
+
     }
 
     @RequiresApi(api = Build.VERSION_CODES.N)
@@ -59,19 +77,18 @@ public class MainActivity extends AppCompatActivity {
                             JSONObject jsonObject = new JSONObject(response);
                             next_url = jsonObject.getString("next");
 
+                            Log.v("my_tag", "next_url is: " + next_url);
+
                             JSONArray jsonArray = jsonObject.getJSONArray("results");
 
-                            ArrayList<String> data = new ArrayList<>();
 
                             for (int i = 0; i < jsonArray.length(); i++) {
                                 JSONObject object = jsonArray.getJSONObject(i);
 
                                 String id = object.getString("id");
-                                data.add(id);
-                                //Log.v("my_tag", "id is: " + id);
+                                dataArray.add(id);
                             }
-
-                            updateUI(data);
+                            updateUI(dataArray);
 
                         } catch (JSONException e) {
                             e.printStackTrace();
