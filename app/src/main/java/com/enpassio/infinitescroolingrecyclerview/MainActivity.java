@@ -59,7 +59,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onLoadMore(int page, int totalItemsCount) {
 
-                if (next_url != null) {
+                if (!next_url.equalsIgnoreCase("null")) {
                     Log.v("my_tagggg", "next_url inside onLoadMore is: " + next_url);
                     getItems(next_url);
                     next_url = null;
