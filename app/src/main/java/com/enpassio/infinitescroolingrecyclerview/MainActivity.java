@@ -33,9 +33,8 @@ public class MainActivity extends AppCompatActivity {
     RecyclerViewAdapter mPopularMoviesAdapter;
 
     ArrayList<String> dataArray;
-
+    ProgressBar progressBar;
     private EndlessRecyclerViewScrollListener scrollListener;
-
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
@@ -59,23 +58,26 @@ public class MainActivity extends AppCompatActivity {
         scrollListener = new EndlessRecyclerViewScrollListener(layoutManagerPopularMoviesPoster) {
             @Override
             public void onLoadMore(int page, int totalItemsCount) {
-                Log.v("my_tagggg", "next_url inside onLoadMore is: " + next_url);
-                if (!next_url.isEmpty())
+
+                if (next_url != null) {
+                    Log.v("my_tagggg", "next_url inside onLoadMore is: " + next_url);
                     getItems(next_url);
-                next_url = null;
+                    next_url = null;
+                }
 
             }
         };
         // Adds the scroll listener to RecyclerView
         mPopularMovieRecyclerView.addOnScrollListener(scrollListener);
+        progressBar = (ProgressBar) findViewById(R.id.progressBar);
+        progressBar.setVisibility(View.VISIBLE);
 
     }
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     public void getItems(String url) {
         Log.v("my_taggggg", "url is: " + url);
-        final ProgressBar progressBar = (ProgressBar) findViewById(R.id.progressBar);
-        progressBar.setVisibility(View.VISIBLE);
+
         StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
                 new Response.Listener<String>() {
                     @Override
