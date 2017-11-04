@@ -7,6 +7,8 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
+import android.view.View;
+import android.widget.ProgressBar;
 
 import com.android.volley.AuthFailureError;
 import com.android.volley.Request;
@@ -58,8 +60,10 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onLoadMore(int page, int totalItemsCount) {
                 Log.v("my_tagggg", "next_url inside onLoadMore is: " + next_url);
-                getItems(next_url);
+                if (!next_url.isEmpty())
+                    getItems(next_url);
                 next_url = null;
+
             }
         };
         // Adds the scroll listener to RecyclerView
@@ -69,10 +73,14 @@ public class MainActivity extends AppCompatActivity {
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     public void getItems(String url) {
+        Log.v("my_taggggg", "url is: " + url);
+        final ProgressBar progressBar = (ProgressBar) findViewById(R.id.progressBar);
+        progressBar.setVisibility(View.VISIBLE);
         StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
                 new Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) {
+                        progressBar.setVisibility(View.GONE);
                         try {
                             JSONObject jsonObject = new JSONObject(response);
                             next_url = jsonObject.getString("next");
@@ -80,6 +88,7 @@ public class MainActivity extends AppCompatActivity {
                             Log.v("my_tag", "next_url is: " + next_url);
 
                             JSONArray jsonArray = jsonObject.getJSONArray("results");
+                            Log.v("my_taggg", "response is: " + response);
 
 
                             for (int i = 0; i < jsonArray.length(); i++) {
@@ -97,7 +106,6 @@ public class MainActivity extends AppCompatActivity {
                 }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
-                // Log.i("response--", String.valueOf(error));
             }
         }) {
             @Override
