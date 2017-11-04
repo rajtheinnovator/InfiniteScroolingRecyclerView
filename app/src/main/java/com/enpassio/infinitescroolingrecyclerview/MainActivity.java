@@ -1,110 +1,84 @@
 package com.enpassio.infinitescroolingrecyclerview;
 
-import android.app.ProgressDialog;
-import android.os.AsyncTask;
+import android.icu.text.DateFormat;
+import android.icu.text.SimpleDateFormat;
+import android.os.Build;
 import android.os.Bundle;
+import android.support.annotation.RequiresApi;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 
+import com.android.volley.AuthFailureError;
+import com.android.volley.Request;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.StringRequest;
+
+import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
-
-import javax.net.ssl.HttpsURLConnection;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 public class MainActivity extends AppCompatActivity {
 
+    @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
-        GetItems getItems = new GetItems();
-        getItems.execute();
+        getItems("http://ec2-35-154-135-19.ap-south-1.compute.amazonaws.com:8001/api/reminders/");
     }
 
-    private class GetItems extends AsyncTask<String, Void, String> {
-        ProgressDialog dialog;
-        HttpURLConnection conn;
+    @RequiresApi(api = Build.VERSION_CODES.N)
+    public  void getItems(String url) {
+        System.out.println("getItemcalled");
+        DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+        System.out.println(dateFormat.format(new Date()));
+        StringRequest stringRequest = new StringRequest(Request.Method.GET,url,
+                new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response) {
+                        try {
+                            Log.v("my_tag", "json response is: "+response);
+                            JSONObject jsonObject=new JSONObject(response);
 
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-            dialog = new ProgressDialog(MainActivity.this);
-            dialog.setMessage("Loading, please wait...");
-            dialog.setTitle("Connecting server");
-            dialog.show();
-            dialog.setCancelable(false);
-        }
+                            Log.v("my_tag", "json jsonObject is: "+jsonObject);
+                            JSONArray jsonArray = jsonObject.getJSONArray("results");
 
-        @Override
-        protected String doInBackground(String... params) {
-            String response = "", jsonresponse = "";
-            BufferedReader bufferedReader = null;
-            JSONObject json = null;
-            JSONObject jsonObject = null;
-            URL url = null;
-            try {
-                Log.v("my_tag", "try runs");
-                url = new URL(params[0]);
-                conn = (HttpURLConnection) url.openConnection();
-                conn.setReadTimeout(10000);
-                conn.setConnectTimeout(15000);
-                conn.setRequestMethod("GET");
-                conn.setDoInput(true);
-                conn.setDoOutput(true);
-                conn.setRequestProperty("Content-Type", "application/json");
-                conn.setRequestProperty("Accept", "application/json");
-                conn.setRequestProperty("Authorization", "Token "+ "fe63a7b37e04515a4cba77d2960526a84d1a56da");
-                int responseCode = conn.getResponseCode();
-                System.out.println("responsecode--"+responseCode);
-                Log.e("my_tag", "responsecode --" + responseCode);
-                Log.e("my_tag", "url is--" +conn.getURL());
-                if (responseCode == HttpsURLConnection.HTTP_CREATED) {
-                    String line;
-                    BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-                    //Log.d("Output",br.toString());
-                    while ((line = br.readLine()) != null) {
-                        response += line;
-                        Log.d("output lines", line);
+                            Log.v("my_tag", "json array is: "+jsonArray);
+                        }
+                        catch (JSONException e) {
+                            e.printStackTrace();
+                        }
                     }
-                    json = new JSONObject(response);
-                    //Get Values from JSONobject
-                    // System.out.println("success=" + json.get("success"));
-
-                    jsonresponse = "success";
-
-                } else {
-                    InputStreamReader inputStreamReader = new InputStreamReader(conn.getErrorStream());
-                    bufferedReader = new BufferedReader(inputStreamReader);
-                    String line = "";
-                    while ((line = bufferedReader.readLine()) != null) {
-                        response += line;
-                        Log.d("output lines", line);
-                    }
-                    // Log.i("response", response);
-                    // json = new JSONObject(response);
-                    // jsonresponse = json.getString("error");
-                    //System.out.println("error=" + json.get("error"));
-                    //succes = json.getString("success");
-                }
-
-            } catch (Exception e) {
-                e.printStackTrace();
-
+                },new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                // Log.i("response--", String.valueOf(error));
             }
-            return jsonresponse;
-        }
+        }){
+            @Override
+            protected Map<String, String> getParams() {
+                Map<String, String> params = new HashMap<>();
 
-        @Override
-        protected void onPostExecute(String result) {
-            Log.v("my_tag", "result is: " + result);
-            if (dialog != null && dialog.isShowing()) {
-                dialog.dismiss();
+                return params;
             }
-        }
+            @Override
+            public Map<String, String> getHeaders() throws AuthFailureError {
+                HashMap<String,String>header=new HashMap<>();
+                header.put("Content-Type", "application/json; charset=utf-8");
+
+                 header.put("Authorization","Token fe63a7b37e04515a4cba77d2960526a84d1a56da");
+                //header.put("Authorization","Token "+ "fe63a7b37e04515a4cba77d2960526a84d1a56da");
+
+                // header.put("Content-Type", "application/x-www-form-urlencoded");
+
+                return header;
+            }
+        } ;
+        MyVolleySingleton.getInstance(MainActivity.this).getRequestQueue().add(stringRequest);
     }
 }
